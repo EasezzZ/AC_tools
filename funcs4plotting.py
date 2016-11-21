@@ -295,7 +295,7 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
             if debug:
                 print fixcb_, arr.shape, [ len(i) for i in lon, lat ], norm, cmap
             poly = m.pcolor( lon, lat, arr, cmap=cmap, norm=norm, alpha=alpha, \
-                vmin=fixcb_[0], vmax=fixcb_[1]  )
+                vmin=fixcb_[0], vmax=fixcb_[1], nticks=nticks )
 
         # -----------------  Log plots --------------------------------
         if log: # l
@@ -305,8 +305,6 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
             if no_cb:
                 pass
             else:
-
-
                 # Get logarithmically spaced integers
                 lvls = np.logspace( np.log10(fixcb[0]), np.log10(fixcb[1]), num=nticks)
                 # Normalise to Log space
