@@ -286,7 +286,7 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
             if debug:
                 print fixcb_, arr.shape, [ len(i) for i in lon, lat ], norm, cmap
             poly = m.pcolor( lon, lat, arr, cmap=cmap, norm=norm, alpha=alpha, \
-                vmin=fixcb_[0], vmax=fixcb_[1])
+                vmin=fixcb_[0], vmax=fixcb_[1] )
 
         # -----------------  Log plots --------------------------------
         if case=="log" or log: # l
@@ -349,7 +349,7 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
 
         # Not sure what case 9 is...
 
-        print lvls
+
 
         vmin=fixcb_[0]
         vmax=fixcb_[1]
@@ -389,10 +389,8 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
             if isinstance(cb, type(None)):
                 ax = plt.gca()
 
-
-            print  lvls, format, shrink, alpha, norm, extend
-            cb = plt.colorbar(poly, ax=ax, ticks=lvls)#, format=format,
-#                    shrink=shrink, alpha=alpha)#, norm=norm)#, extend=extend)
+            cb = plt.colorbar(poly, ax=ax, ticks=lvls, format=format,
+                    shrink=shrink, alpha=alpha, norm=norm, extend=extend)
 
             # Set ylabel tick properties
             cb.ax.tick_params(labelsize=f_size)
@@ -403,14 +401,6 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
 
             cb.set_ticks (np.array(tick_locs) )
             cb.set_ticklabels( lvls )
-
-
-
-
-
-        
-
-
 
         #logging.info(tick_locs, lvls, [ type(i) for i in tick_locs, lvls ])
         #logging.info(cb.get_clim(), title, format)
