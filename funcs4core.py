@@ -18,6 +18,7 @@ import logging
 import os
 
 from math import log10, floor
+import math
 
 # --------------                                                                                              
 # 1.01 - Store of dirs for earth0, atmosviz1, and tms mac                                                     
@@ -596,82 +597,81 @@ def gchemgrid(input=None, rtn_dict=False, debug=False):
     else:
         return d[input]
 
-
-def get_sigfig( x, p=3 ):
+                                                                                
+def get_scientific_number( number, precision, string=False ): 
     """
-    Return a number with only the significant figures required.
+    Gets a number in scientific notation with a given precision.
+    Returns a rounded number by default, or can be returned as a string
+    Recomended for plotting.
 
     Inputs:
-    x: A number
-    sig_figs: The number of sig figs you want returned. Default=3
-    Output:
-    number with only significant figures.
+    number (float) (number you want to change)
+    precision (Integer) (How many significant figures you want)
+    String = True (Boolian) Do you want the output returned as a string?
+
+    Output: float(default) OR string(if string==True)
     """
+    number = float(number)
+    # Special case for 0 
+    if number == 0.:
+        if not string:
+            return float("0." + "0"*(precision-1))
+        else:
+            return ("0." + "0"*(precision-1))
 
-#####################
-#    Found at https://github.com/randlet/to-precision/blob/master/to_precision.py
-#
-#    returns a string representation of x formatted with a precision of p
-#    Based on the webkit javascript implementation taken from here:
-#    https://code.google.com/p/webkit-mirror/source/browse/JavaScriptCore/kjs/number_object.cpp
-##########
-
-    import math
-    x = float(x)
-
-    if x == 0.:
-        return "0." + "0"*(p-1)
-
-    out = []
-
-    if x < 0:
-        out.append("-")
-        x = -x
-
-    e = int(math.log10(x))
-    tens = math.pow(10, e - p + 1)
-    n = math.floor(x/tens)
-
-    if n < math.pow(10, p - 1):
-        e = e -1
-        tens = math.pow(10, e - p+1)
-        n = math.floor(x / tens)
-
-    if abs((n + 1.) * tens - x) <= abs(n * tens -x):
-        n = n + 1
-
-    if n >= math.pow(10,p):
-        n = n / 10.
-        e = e + 1
-
-
-    m = "%.*g" % (p, n)
-
-    if e < -2 or e >= p:
-        out.append(m[0])
-        if p > 1:
-            out.append(".")
-            out.extend(m[1:p])
-        out.append('e')
-        if e > 0:
-            out.append("+")
-        out.append(str(e))
-    elif e == (p -1):
-        out.append(m)
-    elif e >= 0:
-        out.append(m[:e+1])
-        if e+1 < len(m):
-            out.append(".")
-            out.extend(m[e+1:])
+    # If negative prepend with - and use the absolute
+    if number < 0:
+        sign = "-"
+#        precision = precision-1
+        number = -number
     else:
-        out.append("0.")
-        out.extend(["0"]*-(e+1))
-        out.append(m)
+        sign = ""
 
-    return float("".join(out))
+    # Get the exponent
+    exponent = int(math.log10(number))
+    mantisa = number / math.pow(10, exponent)
 
-#    output round(x, -int(floor(log10(abs(x)))))
-#    return output
+    # Fix for leading_zeroes
+    if mantisa < 1:
+        mantisa = mantisa * 10
+        exponent = exponent - 1
+ 
+     
+#    if exponent < 0:                                 
+#        precision = precision+1                      
+    # Get only the sigfigs from the mantisa          
+    mantisa = round(mantisa, precision)              
+                                                     
+    # Fix for leading 10                             
+    if mantisa >= 10:                                
+        print "hello from 10"                        
+        mantisa = mantisa/10.0                       
+        exponent = exponent+1                        
+                                                     
+    # Fix for mantisa=1                              
+    if mantisa == 1.0:                               
+        print "mantisa = 1.0"                        
+        mantisa = "1." + "0"*(precision-1)           
+                                                   
+
+                                                                                
+    # Create the string for the result.                                         
+    out = sign + str(mantisa) 
+    if not exponent==0:
+        out = out + 'E' + str(exponent)                             
+                                                                                
+    # Return the result as a float unless asking for a string.                  
+    if not string:                                                              
+        return float(out)                                                       
+    else:                      
+	    return out
+
+def get_sigfig( x, p=3 ):
+
+    logging.warning( "You are using an outdated function get_sigfig.\
+	Please use get_scientific_number instead")
+
+    return get_scientific_number(x, p)
 
 
         
