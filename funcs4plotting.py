@@ -296,7 +296,7 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
             if debug:
                 print fixcb_, arr.shape, [ len(i) for i in lon, lat ], norm, cmap
             poly = m.pcolor( lon, lat, arr, cmap=cmap, norm=norm, alpha=alpha, \
-                vmin=fixcb_[0], vmax=fixcb_[1], nticks=nticks )
+                vmin=fixcb_[0], vmax=fixcb_[1] )
 
         # -----------------  Log plots --------------------------------
         if log: # l
