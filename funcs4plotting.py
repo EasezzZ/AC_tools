@@ -166,16 +166,6 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
                 4: 'log',
                 }[case]
 
-    if case=="IO":
-        IO=True
-    elif case=="limit_to_1_2":
-        limit_to_1_2=True
-    elif case=="default":
-        default=True
-    elif case=="log":
-        log=True
-    else:
-        raise ValueError, "Unknown case of {case}".format(case=case)
 #################################################################################################### 
 
     # Make sure the input data is usable and try to fix it if not.
@@ -283,7 +273,7 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
 #            cmap, norm = mk_discrete_cmap( vmin=fixcb[0], vmax=fixcb[1], \
 #                    nticks=nticks, cmap=cmap )
 
-    NEW_VERSION=False
+    NEW_VERSION=True
 
     if not NEW_VERSION:
 ####################################################################################################
@@ -292,15 +282,15 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
         # --------------  Linear plots -------------------------------
         # standard plot 
         linear_cases = ["default",9]
-        if case==9 or default:
+        if case==9 or case=="default":
             if debug:
                 print fixcb_, arr.shape, [ len(i) for i in lon, lat ], norm, cmap
             poly = m.pcolor( lon, lat, arr, cmap=cmap, norm=norm, alpha=alpha, \
-                vmin=fixcb_[0], vmax=fixcb_[1], nticks=nticks )
+                vmin=fixcb_[0], vmax=fixcb_[1])
 
         # -----------------  Log plots --------------------------------
-        if log: # l
-            poly = m.pcolor(lon, lat, arr, norm=LogNorm(vmin=fixcb_[0], vmax=fixcb_[1]), \
+        if case=="log" or log: # l
+            poly = m.pcolor(lon, lat, arr, norm=mpl.colors.LogNorm(vmin=fixcb_[0], vmax=fixcb_[1]), \
                 cmap=cmap)
 
             if no_cb:
@@ -357,13 +347,18 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
 
     if NEW_VERSION:
 
-        if case==9 or default:
+        # Not sure what case 9 is...
+
+        print lvls
+
+        vmin=fixcb_[0]
+        vmax=fixcb_[1]
+        if case==9 or case=="default":
             vmin=fixcb_[0]
             vmax=fixcb_[1]
 
-        if log:
-            norm=LogNorm(vmin=fixcb_[0], vmax=fixcb_[1], cmap=cmap)
-            lvls = np.logspace( np.log10(fixcb[0]), np.log10(fixcb[1]), num=nticks)
+        if case=="log":
+            lvls = np.logspace( np.log10(vmin), np.log10(vmax), num=nticks)
             # Normalise to Log space
             norm=mpl.colors.LogNorm(vmin=fixcb_[0], vmax=fixcb_[1])
             extend='min'
@@ -394,8 +389,10 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
             if isinstance(cb, type(None)):
                 ax = plt.gca()
 
-            cb = plt.colorbar(poly, ax=ax, ticks=lvls, format=format,
-                    shrink=shrink, alpha=alpha, norm=norm, extend=extend)
+
+            print  lvls, format, shrink, alpha, norm, extend
+            cb = plt.colorbar(poly, ax=ax, ticks=lvls)#, format=format,
+#                    shrink=shrink, alpha=alpha)#, norm=norm)#, extend=extend)
 
             # Set ylabel tick properties
             cb.ax.tick_params(labelsize=f_size)
@@ -4320,7 +4317,7 @@ def get_human_readable_gradations( lvls=None, vmax=10, vmin=0, \
         nticks=10, sigfig_rounding_on_cb=2, \
         sigfig_rounding_on_cb_ticks=2, \
         sigfig_rounding_on_cb_lvls=2, rtn_lvls_diff=False, \
-        verbose=True, debug=False ):
+        verbose=True, debug=False, NEW_VERSION=False ):
     """ 
     Get human readible gradations for ploting ( e.g. colorbars etc ). 
     OUTPUT:
@@ -4328,146 +4325,167 @@ def get_human_readable_gradations( lvls=None, vmax=10, vmin=0, \
     ticks: list of strings to call the ticks in Sig figs.
     """
 
-    if not np.isfinite(vmin) or not np.isfinite(vmax):
-        cb_error ="Colourbar has a NaN in it. vmin={vmin}, vmax={vmax}"\
-                .format(vmin=vmin, vmax=vmax)
-        logging.error(cb_error)
-        raise ValueError, cb_error
+    if not NEW_VERSION:
+####################################################################################################
+        ##### OLD VERSION
+        # Check that we have sensible inputs.
+        if not np.isfinite(vmin) or not np.isfinite(vmax):
+            cb_error ="Colourbar has a NaN in it. vmin={vmin}, vmax={vmax}"\
+                    .format(vmin=vmin, vmax=vmax)
+            logging.error(cb_error)
+            raise ValueError, cb_error
 
-    logging.debug('get_human_readable_gradiations called with the following:')
-    logging.debug('vmin = {vmin}, vmax = {vmax}, lvls = {lvls}'\
-            .format(vmin=vmin, vmax=vmax, lvls=lvls))
-    
+        logging.debug('get_human_readable_gradiations called with the following:')
+        logging.debug('vmin = {vmin}, vmax = {vmax}, lvls = {lvls}'\
+                .format(vmin=vmin, vmax=vmax, lvls=lvls))
 
-    if isinstance(lvls, type(None)):
-        lvls = np.linspace( vmin, vmax, nticks, endpoint=True )
-
-#    verbose=True
-    # --- Adjust graduations in colourbar to be human readable
-    # in both min and max have absolute values less than 0, then sig figs +1
-    # Find the amount of significant figures needed to show a difference
-    # between vmin and vmax.
-
-
-    if vmin==vmax:
-        logging.error("There is no difference between vmin and vmax!")
-        raise ValueError, "There is no difference between the min and max of the data"
+        if isinstance(lvls, type(None)):
+            lvls = np.linspace( vmin, vmax, nticks, endpoint=True )
+        if vmin==vmax:
+            logging.error("There is no difference between vmin and vmax!")
+            raise ValueError, "There is no difference between the min and max of the data"
 
 
-    try:
-        if ( ( abs( int( vmin)) == 0) and (abs( int( vmax)) == 0) ):
-            sigfig_rounding_on_cb += 1
-        logging.debug("Significant figures needed for plot is {sf}"\
-                .format(sf=sigfig_rounding_on_cb))
-    except np.ma.core.MaskError:
-        print 'Gotcha: numpy.ma.core.MaskError'
-        print lvls, vmin, vmax
+        try:
+            if ( ( abs( int( vmin)) == 0) and (abs( int( vmax)) == 0) ):
+                sigfig_rounding_on_cb += 1
+            logging.debug("Significant figures needed for plot is {sf}"\
+                    .format(sf=sigfig_rounding_on_cb))
+        except np.ma.core.MaskError:
+            print 'Gotcha: numpy.ma.core.MaskError'
+            print lvls, vmin, vmax
 
+                
+        # significant figure ( sig. fig. ) rounding func.
+        round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
+    #    round_to_n = lambda x, n: get_sigfig(x,n)
 
-
-#    # bjn updated sigfig finder
-#    # Use logs to find out sig figs needed
-#    if vmin==0 or vmax==0:
-#        sig_figs_needed = 3
-#    else:
-#        log_diff = abs( np.log10(abs(vmax)) - np.log10(abs(vmin)) )
-#        sig_figs_needed = int(np.ceil(abs(np.log10( log_diff ))))
-#
-#    sigfig_rounding_on_cb_ticks = sig_figs_needed
-
-
-
-
-            
-    # significant figure ( sig. fig. ) rounding func.
-    round_to_n = lambda x, n: round(x, -int(floor(log10(x))) + (n - 1))
-#    round_to_n = lambda x, n: get_sigfig(x,n)
-
-    # --- Get current gradations
-#    if debug:
-#        print abs(lvls[-4])-abs(lvls[-3]), abs(lvls[-4])-abs(lvls[-3]), lvls,\
-#                     sigfig_rounding_on_cb
-    try:
-        lvls_diff =[ round_to_n( abs( i-l[n+1] ), sigfig_rounding_on_cb_ticks) \
-            for n, i in enumerate( l[:-1] ) ] 
-        lvls_diff = list( set( lvls_diff ) )
-        if len(lvls_diff) > 1:
-            lvls_diff = max( lvls_diff )
-#        lvls_diff = round_to_n( abs(lvls[-3])-abs(lvls[-4]), \
-#                                sigfig_rounding_on_cb_ticks)
-    
-    # handle if values (2,3) are both negative or abs. of both <0
-    except:
-        if debug:
-            print abs(lvls[-4])-abs(lvls[-3]), sigfig_rounding_on_cb_ticks
-        try:    # handle if values (2,3) are both negative
-            lvls_diff = round_to_n( abs(lvls[-4])-abs(lvls[-3]), \
-                                sigfig_rounding_on_cb_ticks)                                
-        except: # If both absolute of vmin and vmax  are <0 ( and +ve )
+        # --- Get current gradations
+    #    if debug:
+    #        print abs(lvls[-4])-abs(lvls[-3]), abs(lvls[-4])-abs(lvls[-3]), lvls,\
+    #                     sigfig_rounding_on_cb
+        try:
+            lvls_diff =[ round_to_n( abs( i-l[n+1] ), sigfig_rounding_on_cb_ticks) \
+                for n, i in enumerate( l[:-1] ) ] 
+            lvls_diff = list( set( lvls_diff ) )
+            if len(lvls_diff) > 1:
+                lvls_diff = max( lvls_diff )
+    #        lvls_diff = round_to_n( abs(lvls[-3])-abs(lvls[-4]), \
+    #                                sigfig_rounding_on_cb_ticks)
+        
+        # handle if values (2,3) are both negative or abs. of both <0
+        except:
             if debug:
-                print lvls, lvls[-3], lvls[-4], sigfig_rounding_on_cb_ticks
-            lvls_diff = round_to_n( lvls[-3]-lvls[-4], \
-                                sigfig_rounding_on_cb_ticks)                                
+                print abs(lvls[-4])-abs(lvls[-3]), sigfig_rounding_on_cb_ticks
+            try:    # handle if values (2,3) are both negative
+                lvls_diff = round_to_n( abs(lvls[-4])-abs(lvls[-3]), \
+                                    sigfig_rounding_on_cb_ticks)                                
+            except: # If both absolute of vmin and vmax  are <0 ( and +ve )
+                if debug:
+                    print lvls, lvls[-3], lvls[-4], sigfig_rounding_on_cb_ticks
+                lvls_diff = round_to_n( lvls[-3]-lvls[-4], \
+                                    sigfig_rounding_on_cb_ticks)                                
 
 
-    # ---  Round top of colorbar lvls, then count down from this
-    # first get top numer rounded up to nearest 'lvls_diff'
-    # caution, this may result in a number outside the cmap, 
-    # solution: use get_colormap, with buffer_cmap_upper=True
-    #  if values are >0, 
-    if vmax > lvls_diff:
+        # ---  Round top of colorbar lvls, then count down from this
+        # first get top numer rounded up to nearest 'lvls_diff'
+        # caution, this may result in a number outside the cmap, 
+        # solution: use get_colormap, with buffer_cmap_upper=True
+        #  if values are >0, 
+        if vmax > lvls_diff:
+            if debug:
+                print vmax, lvls_diff
+            vmax_rounded = myround( vmax, base=lvls_diff,  integer=False )
+            vmax_rounded = round_to_n( vmax_rounded, sigfig_rounding_on_cb)
+        else:
+            # <= update needed! - add function to round negative numbers
+            # ( this method also fails if vmax<lvls_diff )
+            vmax_rounded = vmax
+
+    #    if debug:
+    #        print 1, lvls, vmax_rounded, lvls_diff, sigfig_rounding_on_cb_lvls
+
+        lvls = np.array([ vmax_rounded - lvls_diff*i \
+                for i in range( nticks ) ][::-1])   
+
+        logging.debug("colorbar levels are: {lvls}".format(lvls=lvls))
         if debug:
-            print vmax, lvls_diff
-        vmax_rounded = myround( vmax, base=lvls_diff,  integer=False )
-        vmax_rounded = round_to_n( vmax_rounded, sigfig_rounding_on_cb)
-    else:
-        # <= update needed! - add function to round negative numbers
-        # ( this method also fails if vmax<lvls_diff )
-        vmax_rounded = vmax
+            print lvls, len( lvls )
+            print 2, lvls, vmax_rounded, lvls_diff, sigfig_rounding_on_cb_lvls
 
-#    if debug:
-#        print 1, lvls, vmax_rounded, lvls_diff, sigfig_rounding_on_cb_lvls
-
-    lvls = np.array([ vmax_rounded - lvls_diff*i \
-            for i in range( nticks ) ][::-1])   
-
-    logging.debug("colorbar levels are: {lvls}".format(lvls=lvls))
-    if debug:
-        print lvls, len( lvls )
-        print 2, lvls, vmax_rounded, lvls_diff, sigfig_rounding_on_cb_lvls
-
-    # ensure returned ticks are to a maximum of 2 sig figs  
-    # ( this only works if all positive ) and are unique
-#    try:
-#        # Make sure the colorbar labels are not repeated
-#        invalid = True
-#        while invalid:
-#            new_lvls = [ round_to_n( i, sigfig_rounding_on_cb_lvls) \
-#                for i in lvls ]
-#            if len( set(new_lvls) ) == len(lvls):
-#                lvls = new_lvls
-#                invalid=False
-#            else: # Try with one more sig fig
-#                sigfig_rounding_on_cb_lvls += 1
-#
-#    except:
-#        print 'WARNING: unable to round level values to {} sig figs'.format(\
-#                   sigfig_rounding_on_cb_lvls  )
-
-    new_lvls = []
-    for level in lvls:
-        new_lvls.append(get_sigfig(level, sigfig_rounding_on_cb_lvls))
-
-    lvls = new_lvls
+        # ensure returned ticks are to a maximum of 2 sig figs  
+        # ( this only works if all positive ) and are unique
+    #    try:
+    #        # Make sure the colorbar labels are not repeated
+    #        invalid = True
+    #        while invalid:
+    #            new_lvls = [ round_to_n( i, sigfig_rounding_on_cb_lvls) \
+    #                for i in lvls ]
+    #            if len( set(new_lvls) ) == len(lvls):
+    #                lvls = new_lvls
+    #                invalid=False
+    #            else: # Try with one more sig fig
+    #                sigfig_rounding_on_cb_lvls += 1
+    #
+    #    except:
+    #        print 'WARNING: unable to round level values to {} sig figs'.format(\
+    #                   sigfig_rounding_on_cb_lvls  )
 
 
-    if debug:
-        print 3, lvls, vmax_rounded, lvls_diff, sigfig_rounding_on_cb_lvls
 
-    if rtn_lvls_diff:
-        return lvls, lvls_diff
-    else:
-        return lvls
+
+        if debug:
+            print 3, lvls, vmax_rounded, lvls_diff, sigfig_rounding_on_cb_lvls
+
+        if rtn_lvls_diff:
+            return lvls, lvls_diff
+        else:
+            return lvls
+
+####################################################################################################
+
+    if NEW_VERSION:
+
+
+        print locals()
+        difference = np.divide(vmax-vmin, nticks)
+        print difference
+        if lvls==None:
+            lvls = []
+            new_level = vmin
+            while new_level <= vmax:
+                print new_level
+                lvls.append(new_level)
+                new_level += difference
+
+        print "Hello there"
+        print lvls
+
+
+        # bjn updated sigfig finder
+        # Use logs to find out sig figs needed
+        if vmin==0 or vmax==0:
+            sig_figs_needed = 3
+        else:
+            log_diff = abs( np.log10(abs(vmax)) - np.log10(abs(vmin)) )
+            sig_figs_needed = int(np.ceil(abs(np.log10( log_diff ))))
+    
+        sigfig_rounding_on_cb_ticks = sig_figs_needed
+
+
+        new_lvls = []
+        for level in lvls:
+            new_lvls.append(get_sigfig(level, 3))
+        lvls = new_lvls
+
+
+        if rtn_lvls_diff:
+            return lvls, difference
+        else:
+            return lvls
+
+
+
 
 # --------
 # 4.43 - mk colourmap discrete 
