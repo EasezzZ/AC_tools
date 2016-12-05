@@ -89,6 +89,19 @@ def test_save_plot_with_filetypes(test_data):
     os.remove(filename2)
     return
 
+@slow
+def test_save_plot_spatial_figure_default(test_data):
+    # create figure 
+    fig = plt.figure()
+    # plot figure 
+    plot_spatial_figure(test_data[:,:,:,0]*1E9, fig=fig, \
+        fixcb=np.array( [0, 25] ), nticks=10, pdf=False, show=False,  )
+            
+    save_plot()
+    filename = "myplot.png"
+    os.remove(filename)
+    return
+
     # Test plot has been created, and then remove it"
 #    filenames = [filename_0, filename_1, filename_2, 
 #                filename_3, filename_4, filename_5]

@@ -273,7 +273,8 @@ def map_plot( arr, return_m=False, grid=False, centre=False, cmap=None, no_cb=Fa
 #            cmap, norm = mk_discrete_cmap( vmin=fixcb[0], vmax=fixcb[1], \
 #                    nticks=nticks, cmap=cmap )
 
-    NEW_VERSION=True
+#    NEW_VERSION=True
+    NEW_VERSION=False
 
     if not NEW_VERSION:
 ####################################################################################################
